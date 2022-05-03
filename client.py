@@ -3,7 +3,7 @@ import socket
 from constants import * 
 
 # Initiate client socket
-clientSocket = socket(socket.AF_INET, socket.SOCK_STREAM)
+clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 clientSocket.connect(SERVER_ADDRESS)
 
 # Get sentence from user
