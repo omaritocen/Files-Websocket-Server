@@ -3,23 +3,26 @@ import threading
 
 from constants import *
 
-## Define constants
-
-# Get the host IP address of the current machine
-ADDRESS = ('', PORT)
 
 # Setup Server
-
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ADDRESS = ('', PORT)
 server.bind(ADDRESS)
 
 
 def handle_client(conn, sender_address):
     print(f'[NEW CONNECTION] recieved message from {sender_address}')
 
+    # Recieve data from connection
     sentence = conn.recv(BUFFER_SIZE).decode()
+
+    # Process data
     capitalized_sentence = sentence.upper()
+
+    # Send data back to client
     conn.send(capitalized_sentence.encode())
+
+    # Close client connection
     conn.close()
 
 def start():
