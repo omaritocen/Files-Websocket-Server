@@ -1,0 +1,2 @@
+GET index.html 10.0.0.101
+POST index.html 10.0.0.101
