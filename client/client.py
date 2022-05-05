@@ -1,6 +1,12 @@
 import socket
 
-from constants import * 
+
+BUFFER_SIZE = 2048
+
+# TODO: DELETE
+SERVER_IP = '10.0.0.101' # My LAN IP
+PORT = 5505
+SERVER_ADDRESS = (SERVER_IP, PORT)
 
 # Initiate client socket
 clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -14,7 +20,7 @@ clientSocket.send(sentence.encode())
 
 
 # Decode recieved socket
-recieved_sentence = clientSocket.recv(BUFFER_SIZE)
+recieved_sentence = clientSocket.recv()
 decoded_sentence = recieved_sentence.decode()
 
 # Print the result

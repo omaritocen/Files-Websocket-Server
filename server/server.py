@@ -1,8 +1,10 @@
 import socket
 import threading
 
-from constants import *
-
+# DEFINE CONSTANTS
+MAX_CONNECTIONS = 5
+PORT = 5505
+BUFFER_SIZE = 2048
 
 # Setup Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
