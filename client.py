@@ -2,22 +2,54 @@ import socket
 
 from constants import * 
 
+def get_server_address():
+    with open('input_file.txt') as f:
+        for line in f:
+            words = line.split(" ", 3)
+            server_ip = words[2]
+            port = words[3]
+            break
+        return server_ip,port
+
+def process_get(filename,server_ip_address):
+    message = 'GET /files/{0} HTTP/1.1\nHost: {1}'.format(filename,server_ip_address)
+    return message
+
+
+
+def process_post(filename,server_ip_address,data='to be added'):
+    #TODO calculate content length and content type if needed
+    message = 'POST /files/{0} HTTP/1.1\nHost: {1}\nContent-Length:\nContent-Type:\n\nData'.format(filename,server_ip_address)
+    return message
+
+
 # Read GET/POST requests from input file 
-with open('input_file.txt') as f:
-    requests = []
-    for line in f:
-        requests.append(line)
+server_ip,port = get_server_address()
+server_address = (server_ip,port)
 
 # Initiate client socket
 clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-clientSocket.connect(SERVER_ADDRESS)
+clientSocket.connect(server_address)
 
-# Declaring GET/POST Requests
-GET = requests[0]
-POST = requests[1]
 
-# Send the request to the server
-clientSocket.send(GET.encode())
+with open('input_file.txt') as f:
+    
+    for line in f:
+        words = line.split(" ", 3)
+        request_type = words[0]
+        filename = words[1]
+        server_address = (server_ip, port)
+        if(request_type == 'GET'):
+            get_message = process_get(filename,server_ip)
+            # Send the request to the server
+            clientSocket.send(get_message.encode())
+        else :
+            #TODO get the data of the file and pass it to the function
+            post_message = process_post(filename,server_ip)  
+            # Send the request to the server
+            clientSocket.send(post_message.encode())
+
+
 
 
 # Decode recieved socket
