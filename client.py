@@ -23,7 +23,7 @@ def process_post(filename,server_ip_address,data='to be added'):
     return message
 
 
-# Read GET/POST requests from input file 
+# Read Server Address from input file 
 server_ip,port = get_server_address()
 server_address = (server_ip,port)
 
@@ -33,7 +33,7 @@ clientSocket.connect(server_address)
 
 
 with open('input_file.txt') as f:
-    
+
     for line in f:
         words = line.split(" ", 3)
         request_type = words[0]
