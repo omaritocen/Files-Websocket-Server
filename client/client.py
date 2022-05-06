@@ -1,7 +1,30 @@
 import socket
+from tokenize import String
+import sys
 
 
 BUFFER_SIZE = 2048
+FORMAT = "utf-8"
+
+def transfer_file(filename):
+    try:
+        file = open(filename, "r")
+        return file.read().encode(FORMAT)
+    except FileNotFoundError:
+        print(f"{filename} doesn't exist")
+    except IOError as e:
+        print(f"IOError: {e}")
+    except:
+        print(f"Unexpected Error: {sys.exc_info()[0]}")
+
+def receive_file(filename, data):
+    try:
+        file = open(filename, "w")
+        file.write(data.decode(FORMAT))
+    except IOError as e:
+        print(f"IOError: {e}")
+    except:
+        print(f"Unexpected Error: {sys.exc_info()[0]}")
 
 def get_server_address():
     with open('input_file.txt') as f:
@@ -35,7 +58,6 @@ with open('input_file.txt') as f:
         words = line.split(" ", 3)
         request_type = words[0]
         filename = words[1]
-        server_address = (server_ip, port)
 
         # Initiate client socket
         clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
