@@ -10,7 +10,7 @@ def get_server_address():
             server_ip = words[2]
             port = words[3]
             break
-        return server_ip,port
+        return server_ip, int(port)
 
 def process_get(filename,server_ip_address):
     message = 'GET /files/{0} HTTP/1.1\nHost: {1}'.format(filename,server_ip_address)
@@ -28,10 +28,6 @@ def process_post(filename,server_ip_address,data='to be added'):
 server_ip,port = get_server_address()
 server_address = (server_ip,port)
 
-# Initiate client socket
-clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-clientSocket.connect(server_address)
-
 
 with open('input_file.txt') as f:
 
@@ -40,25 +36,39 @@ with open('input_file.txt') as f:
         request_type = words[0]
         filename = words[1]
         server_address = (server_ip, port)
-        if(request_type == 'GET'):
+
+        # Initiate client socket
+        clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        clientSocket.connect(server_address)
+        
+        if request_type == 'GET':
             get_message = process_get(filename,server_ip)
             # Send the request to the server
             clientSocket.send(get_message.encode())
-        else :
+            # Decode recieved socket
+            recieved_sentence = clientSocket.recv(BUFFER_SIZE)
+            decoded_sentence = recieved_sentence.decode()
+            # Print the result
+            print(decoded_sentence)
+
+        elif request_type == 'POST' :
             #TODO get the data of the file and pass it to the function
             post_message = process_post(filename,server_ip)  
             # Send the request to the server
             clientSocket.send(post_message.encode())
+            # Decode recieved socket
+            recieved_sentence = clientSocket.recv(BUFFER_SIZE)
+            decoded_sentence = recieved_sentence.decode()
+
+            # Print the result
+            print(decoded_sentence)
+
+        print('')
+        print('------------------------------------')
 
 
 
-
-# Decode recieved socket
-recieved_sentence = clientSocket.recv()
-decoded_sentence = recieved_sentence.decode()
-
-# Print the result
-print('From server: ', decoded_sentence)
+clientSocket.close()
+print('[CLIENT PROCESS ENDED]')
 
 # Close the connection
-clientSocket.close()
