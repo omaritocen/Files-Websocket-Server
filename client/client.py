@@ -3,11 +3,6 @@ import socket
 
 BUFFER_SIZE = 2048
 
-# TODO: DELETE
-SERVER_IP = '10.0.0.101' # My LAN IP
-PORT = 5505
-SERVER_ADDRESS = (SERVER_IP, PORT)
-
 def get_server_address():
     with open('input_file.txt') as f:
         for line in f:
