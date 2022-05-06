@@ -43,7 +43,7 @@ def process_get(filename,server_ip_address):
 
 def process_post(filename,server_ip_address,data='to be added'):
     #TODO calculate content length and content type if needed
-    message = 'POST /files/{0} HTTP/1.1\nHost: {1}\nContent-Length:\nContent-Type:\n\nData'.format(filename,server_ip_address)
+    message = 'POST /files/{0} HTTP/1.1\nHost: {1}\nContent-Length:\nContent-Type:\r\nData: {2}\r\n'.format(filename,server_ip_address, data)
     return message
 
 
@@ -75,7 +75,8 @@ with open('input_file.txt') as f:
 
         elif request_type == 'POST' :
             #TODO get the data of the file and pass it to the function
-            post_message = process_post(filename,server_ip)  
+            data = transfer_file(filename)
+            post_message = process_post(filename,server_ip, data)  
             # Send the request to the server
             clientSocket.send(post_message.encode())
             # Decode recieved socket
