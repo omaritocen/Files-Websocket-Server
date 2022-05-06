@@ -12,6 +12,8 @@ ADDRESS = ('', PORT)
 server.bind(ADDRESS)
 
 
+
+
 def handle_client(conn, sender_address):
     print(f'[NEW CONNECTION] recieved message from {sender_address}')
 
