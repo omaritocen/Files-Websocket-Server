@@ -36,14 +36,14 @@ def get_server_address():
         return server_ip, int(port)
 
 def process_get(filename,server_ip_address):
-    message = 'GET /files/{0} HTTP/1.1\nHost: {1}'.format(filename,server_ip_address)
+    message = 'GET /files/{0} HTTP/1.1\r\nHost: {1}'.format(filename,server_ip_address)
     return message
 
 
 
 def process_post(filename,server_ip_address,data='to be added'):
     #TODO calculate content length and content type if needed
-    message = 'POST /files/{0} HTTP/1.1\nHost: {1}\nContent-Length:\nContent-Type:\r\nData: {2}\r\n'.format(filename,server_ip_address, data)
+    message = 'POST /files/{0} HTTP/1.1\r\nHost: {1}\r\nContent-Length:\nContent-Type:\r\nData: {2}\r\n'.format(filename,server_ip_address, data)
     return message
 
 
