@@ -1,16 +1,37 @@
 import socket
 import threading
+import sys
 
 # DEFINE CONSTANTS
 MAX_CONNECTIONS = 5
 PORT = 5505
 BUFFER_SIZE = 2048
+FORMAT = "utf-8"
 
 # Setup Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ADDRESS = ('', PORT)
 server.bind(ADDRESS)
 
+def transfer_file(filename):
+    try:
+        file = open(filename, "r")
+        return file.read().encode(FORMAT)
+    except FileNotFoundError:
+        print(f"{filename} doesn't exist")
+    except IOError as e:
+        print(f"IOError: {e}")
+    except:
+        print(f"Unexpected Error: {sys.exc_info()[0]}")
+
+def receive_file(filename, data):
+    try:
+        file = open(filename, "w")
+        file.write(data.decode(FORMAT))
+    except IOError as e:
+        print(f"IOError: {e}")
+    except:
+        print(f"Unexpected Error: {sys.exc_info()[0]}")
 
 
 

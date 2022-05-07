@@ -1,7 +1,30 @@
 import socket
+from tokenize import String
+import sys
 
 
 BUFFER_SIZE = 2048
+FORMAT = "utf-8"
+
+def transfer_file(filename):
+    try:
+        file = open(filename, "r")
+        return file.read().encode(FORMAT)
+    except FileNotFoundError:
+        print(f"{filename} doesn't exist")
+    except IOError as e:
+        print(f"IOError: {e}")
+    except:
+        print(f"Unexpected Error: {sys.exc_info()[0]}")
+
+def receive_file(filename, data):
+    try:
+        file = open(filename, "w")
+        file.write(data.decode(FORMAT))
+    except IOError as e:
+        print(f"IOError: {e}")
+    except:
+        print(f"Unexpected Error: {sys.exc_info()[0]}")
 
 def get_server_address():
     with open('input_file.txt') as f:
@@ -20,7 +43,7 @@ def process_get(filename,server_ip_address):
 
 def process_post(filename,server_ip_address,data='to be added'):
     #TODO calculate content length and content type if needed
-    message = 'POST /files/{0} HTTP/1.1\nHost: {1}\nContent-Length:\nContent-Type:\n\nData'.format(filename,server_ip_address)
+    message = 'POST /files/{0} HTTP/1.1\nHost: {1}\nContent-Length:\nContent-Type:\r\nData: {2}\r\n'.format(filename,server_ip_address, data)
     return message
 
 
@@ -35,7 +58,6 @@ with open('input_file.txt') as f:
         words = line.split(" ", 3)
         request_type = words[0]
         filename = words[1]
-        server_address = (server_ip, port)
 
         # Initiate client socket
         clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -53,7 +75,8 @@ with open('input_file.txt') as f:
 
         elif request_type == 'POST' :
             #TODO get the data of the file and pass it to the function
-            post_message = process_post(filename,server_ip)  
+            data = transfer_file(filename)
+            post_message = process_post(filename,server_ip, data)  
             # Send the request to the server
             clientSocket.send(post_message.encode())
             # Decode recieved socket
