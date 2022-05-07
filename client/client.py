@@ -36,7 +36,7 @@ def get_server_address():
         return server_ip, int(port)
 
 def process_get(filename,server_ip_address):
-    message = 'GET /files/{0} HTTP/1.1\nHost: {1}'.format(filename,server_ip_address)
+    message = 'GET /files/{0} HTTP/1.1\nHost: {1}\r\n'.format(filename,server_ip_address)
     return message
 
 
@@ -67,21 +67,20 @@ with open('input_file.txt') as f:
             get_message = process_get(filename,server_ip)
             # Send the request to the server
             clientSocket.send(get_message.encode())
-            # Decode recieved socket
-            recieved_sentence = clientSocket.recv(BUFFER_SIZE)
-            decoded_sentence = recieved_sentence.decode()
+            # Decode received socket
+            respone = clientSocket.recv(BUFFER_SIZE).decode(FORMAT)
             # Print the result
-            print(decoded_sentence)
+            print(respone)
 
         elif request_type == 'POST' :
             #TODO get the data of the file and pass it to the function
             data = transfer_file(filename)
             post_message = process_post(filename,server_ip, data)  
             # Send the request to the server
-            clientSocket.send(post_message.encode())
-            # Decode recieved socket
-            recieved_sentence = clientSocket.recv(BUFFER_SIZE)
-            decoded_sentence = recieved_sentence.decode()
+            clientSocket.send(post_message.encode(FORMAT))
+            # Decode received socket
+            received_sentence = clientSocket.recv(BUFFER_SIZE)
+            decoded_sentence = received_sentence.decode()
 
             # Print the result
             print(decoded_sentence)
