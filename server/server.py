@@ -16,8 +16,8 @@ server.bind(ADDRESS)
 
 def transfer_file(filename):
     try:
-        file = open(filename, "r")
-        return file.read().encode(FORMAT)
+        file = open(filename, "rb")
+        return file.read()    
     except FileNotFoundError:
         print(f"{filename} doesn't exist")
         return -1
@@ -50,12 +50,18 @@ def handle_client(conn, sender_address):
     # Process data
     lines = request.split('\r\n')
     words = lines[0].split(' ')
+
     request_type = words[0]
-    filename = words[1]
+    filename = words[1].split('/')[2]
     http_type = words[2]
+
+    print(request_type)
+    print(http_type)
+
     response = ""
     if request_type == 'GET':
         file = transfer_file(filename)
+
         if file != -1:
             response = rg.get_response_by_verb(http_type, request_type, True, file)
         else:

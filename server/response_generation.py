@@ -21,7 +21,10 @@ def generate_response_message(protocol: str, status_code: int, extra_headers_lin
         return status_line
 
 
-    lines = [status_line, *extra_headers_lines, body,  "\r\n"]
+    lines = [status_line, *extra_headers_lines, "\r\n"]
+
+    if body is not None:
+        lines.insert(len(lines) - 1, body)
 
     response_message = ""
     for line in lines:
@@ -30,15 +33,11 @@ def generate_response_message(protocol: str, status_code: int, extra_headers_lin
     return response_message
 
 
-def get_response_by_verb(protocol:str, verb: str, success: bool, body: str):
+def get_response_by_verb(protocol:str, verb: str, success: bool, body: str = None):
 
     status_code = 200 if success else 404
 
     if verb == 'GET':
         return generate_response_message(protocol, status_code, [], body, False)
     elif verb == 'POST':
-        return generate_response_message(protocol, status_code, [], '', True)
-
-
-x = get_response_by_verb('HTTP/1.1', 'GET', True, 'THIS IS THE BODY')
-print(x)
+        return generate_response_message(protocol, status_code, [], success=True)
