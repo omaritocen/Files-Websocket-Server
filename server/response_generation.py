@@ -40,5 +40,5 @@ def get_response_by_verb(protocol:str, verb: str, success: bool, body: str):
         return generate_response_message(protocol, status_code, [], '', True)
 
 
-x = get_response_by_verb('HTTP/1.1', 'GET', True, 'THIS IS THE BODY')
+x = get_response_by_verb('HTTP/1.1', 'POST', True, 'THIS IS THE BODY')
 print(x)

@@ -59,6 +59,7 @@ with open('input_file.txt') as f:
             # Decode recieved socket
             recieved_sentence = clientSocket.recv(BUFFER_SIZE)
             decoded_sentence = recieved_sentence.decode()
+            print(decoded_sentence)
 
             # Print the result
             print(decoded_sentence)
