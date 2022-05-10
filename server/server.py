@@ -11,12 +11,14 @@ FORMAT = "utf-8"
 
 # Setup Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-ADDRESS = ('', PORT)
+HOST = socket.gethostbyname("localhost")
+ADDRESS = (HOST, PORT)
 server.bind(ADDRESS)
+print(server.getsockname())
 
 def transfer_file(filename):
     try:
-        file = open(filename, "rb")
+        file = open(filename, "r")
         return file.read()    
     except FileNotFoundError:
         print(f"{filename} doesn't exist")
@@ -31,7 +33,7 @@ def transfer_file(filename):
 def receive_file(filename, data):
     try:
         file = open(filename, "w")
-        file.write(data.decode(FORMAT))
+        file.write(data)
         return 0
     except IOError as e:
         print(f"IOError: {e}")
@@ -67,10 +69,10 @@ def handle_client(conn, sender_address):
         else:
             response = rg.get_response_by_verb(http_type, request_type, False)
     else:
-        data = lines[1].split(' ')[1]
+        data = lines[-1][6:]
         receive = receive_file(filename, data)
         if receive != -1:
-            response = rg.get_response_by_verb(http_type, request_type, True, file)
+            response = rg.get_response_by_verb(http_type, request_type, True)
         else:
             response = rg.get_response_by_verb(http_type, request_type, False)
 

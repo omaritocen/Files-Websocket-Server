@@ -11,12 +11,12 @@ def get_status_message_from_code(status_code: int):
     else:
         return 'Undefined'
 
-def generate_response_message(protocol: str, status_code: int, extra_headers_lines: str, body: str, status_only: bool):
+def generate_response_message(protocol: str, status_code: int, extra_headers_lines: str, status_only: bool, body=None):
     status_message = get_status_message_from_code(status_code)
     
 
-    status_line = f"{protocol} {status_code} {status_message}\r\n"
-
+    status_line = f"{protocol} {status_code} {status_message}\r\n\r\n"
+    print(status_line)
     if status_only:
         return status_line
 
@@ -25,10 +25,12 @@ def generate_response_message(protocol: str, status_code: int, extra_headers_lin
 
     if body is not None:
         lines.insert(len(lines) - 1, body)
+    lines.insert(len(lines) - 1, "\r\n") 
 
     response_message = ""
     for line in lines:
         response_message += line
+    
 
     return response_message
 
@@ -38,6 +40,6 @@ def get_response_by_verb(protocol:str, verb: str, success: bool, body: str = Non
     status_code = 200 if success else 404
 
     if verb == 'GET':
-        return generate_response_message(protocol, status_code, [], body, False)
+        return generate_response_message(protocol, status_code, [], False, body)
     elif verb == 'POST':
-        return generate_response_message(protocol, status_code, [], success=True)
+        return generate_response_message(protocol, status_code, [], True)
