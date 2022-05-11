@@ -1,3 +1,4 @@
+from ntpath import join
 import socket
 import threading
 import sys
@@ -15,6 +16,7 @@ HOST = socket.gethostbyname("localhost")
 ADDRESS = (HOST, PORT)
 server.bind(ADDRESS)
 print(server.getsockname())
+
 
 def transfer_file(filename):
     try:
