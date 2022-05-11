@@ -57,8 +57,8 @@ def handle_client(conn, sender_address):
     filename = words[1].split('/')[2]
     http_type = words[2]
 
-    print(request_type)
-    print(http_type)
+    # print(request_type)
+    # print(http_type)
 
     response = ""
     if request_type == 'GET':

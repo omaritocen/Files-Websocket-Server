@@ -35,16 +35,13 @@ def get_server_address():
             break
         return server_ip, int(port)
 
-def process_get(filename,server_ip_address):
-    message = 'GET /files/{0} HTTP/1.1\nHost: {1}\r\n'.format(filename,server_ip_address)
-    return message
+def process_get(filename,server_ip_address,port = 80):
+    return 'GET /files/{0} HTTP/1.1\nHost: {1}:{2}\r\n\r\n'.format(filename,server_ip_address,port)
 
 
 
-def process_post(filename,server_ip_address,data='to be added'):
-    #TODO calculate content length and content type if needed
-    message = 'POST /files/{0} HTTP/1.1\r\nHost: {1}\r\nContent-Length:\nContent-Type:\r\nData: {2}\r\n'.format(filename,server_ip_address, data)
-    return message
+def process_post(filename,server_ip_address,data='to be added',port=80):
+    return  'POST /files/{0} HTTP/1.1\r\nHost: {1}:{3}\r\n\r\nData: {2}\r\n'.format(filename,server_ip_address, data,port)
 
 
 # Read Server Address from input file 
@@ -64,18 +61,19 @@ with open('input_file.txt') as f:
         clientSocket.connect(server_address)
         
         if request_type == 'GET':
-            get_message = process_get(filename,server_ip)
+            get_message = process_get(filename,server_ip,port)
             # Send the request to the server
             clientSocket.send(get_message.encode())
             # Decode received socket
             respone = clientSocket.recv(BUFFER_SIZE).decode(FORMAT)
             # Print the result
             print(respone)
+            #TODO process the response message and extract the file
 
         elif request_type == 'POST' :
-            #TODO get the data of the file and pass it to the function
+
             data = transfer_file(filename)
-            post_message = process_post(filename,server_ip, data)  
+            post_message = process_post(filename,server_ip, data,port)  
             # Send the request to the server
             clientSocket.send(post_message.encode(FORMAT))
             # Decode received socket
