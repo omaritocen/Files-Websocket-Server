@@ -1,2 +1,3 @@
-GET index.html 10.0.0.101 5505
-POST index.html 10.0.0.101 5505
+GET / www.facebook.com 80
+GET / www.google.com 80
+GET /files/index.html 10.0.0.101 5505

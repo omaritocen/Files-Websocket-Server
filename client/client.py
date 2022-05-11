@@ -1,9 +1,8 @@
 import socket
-from tokenize import String
 import sys
 
 
-BUFFER_SIZE = 2048
+BUFFER_SIZE = 4096
 FORMAT = "utf-8"
 
 def transfer_file(filename):
@@ -26,27 +25,20 @@ def receive_file(filename, data):
     except:
         print(f"Unexpected Error: {sys.exc_info()[0]}")
 
-def get_server_address():
-    with open('input_file.txt') as f:
-        for line in f:
-            words = line.split(" ", 3)
-            server_ip = words[2]
-            port = words[3]
-            break
-        return server_ip, int(port)
-
-def process_get(filename,server_ip_address,port = 80):
-    return 'GET /files/{0} HTTP/1.1\nHost: {1}:{2}\r\n\r\n'.format(filename,server_ip_address,port)
+def process_get(route,host, protocol = 'HTTP/1.1'):
+    status_line = f'GET {route} {protocol}\r\n'
+    host_line = f'Host: {host}\r\n'
+    message = status_line + host_line + "\r\n"
+    return message
 
 
 
-def process_post(filename,server_ip_address,data='to be added',port=80):
-    return  'POST /files/{0} HTTP/1.1\r\nHost: {1}:{3}\r\n\r\nData: {2}\r\n'.format(filename,server_ip_address, data,port)
-
-
-# Read Server Address from input file 
-server_ip,port = get_server_address()
-server_address = (server_ip,port)
+def process_post(route, host, protocol = 'HTTP/1.1', data='to be added'):
+    status_line = f'POST {route} {protocol}\r\n'
+    host_line = f'Host: {host}\r\n'
+    content_type = "multipart/form-data"
+    message = status_line + host_line + content_type + "\r\n"
+    return message
 
 
 with open('input_file.txt') as f:
@@ -54,26 +46,29 @@ with open('input_file.txt') as f:
     for line in f:
         words = line.split(" ", 3)
         request_type = words[0]
-        filename = words[1]
+        route = words[1]
+        host = words[2]
+        port = int(words[3])
 
         # Initiate client socket
         clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        clientSocket.connect(server_address)
+        clientSocket.connect((host, port))
         
         if request_type == 'GET':
-            get_message = process_get(filename,server_ip,port)
+            get_message = process_get(route, host)
+            print(get_message)
             # Send the request to the server
             clientSocket.send(get_message.encode())
             # Decode received socket
-            respone = clientSocket.recv(BUFFER_SIZE).decode(FORMAT)
+
+            response = clientSocket.recv(BUFFER_SIZE).decode(FORMAT)
             # Print the result
-            print(respone)
-            #TODO process the response message and extract the file
+            print(response)
 
         elif request_type == 'POST' :
-
-            data = transfer_file(filename)
-            post_message = process_post(filename,server_ip, data,port)  
+            #TODO get the data of the file and pass it to the function
+            data = transfer_file(route)
+            post_message = process_post(route,host, data)  
             # Send the request to the server
             clientSocket.send(post_message.encode(FORMAT))
             # Decode received socket
