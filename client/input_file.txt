@@ -1,1 +1,1 @@
-GET /files/test.txt 127.0.0.1 5505
+GET /files/index.html 127.0.0.1 5505

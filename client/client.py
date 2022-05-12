@@ -89,16 +89,10 @@ with open('input_file.txt') as f:
             lines = full_response.split('\r\n')
             words = lines[0].split(' ')
             http_type = words[0]
-            print(http_type)
             status_code = words[1]
             status_message = words[2]
-
             data = lines[-2]
-            print(data)
             receive = receive_file(filename, data)
- 
-            # Print the result
-            print(full_response)
 
 
         elif request_type == 'POST' :
