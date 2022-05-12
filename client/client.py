@@ -37,7 +37,7 @@ def transfer_file(filename):
 def receive_file(filename, data):
     try:
         file = open(filename, "w")
-        file.write(data.decode(FORMAT))
+        file.write(data)
     except IOError as e:
         print(f"IOError: {e}")
     except:
