@@ -1,3 +1,1 @@
-GET / www.facebook.com 80
-GET / www.google.com 80
-GET /files/index.html 10.0.0.101 5505
+GET /files/index.html 127.0.0.1 5505
