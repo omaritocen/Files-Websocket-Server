@@ -14,7 +14,7 @@ def get_status_message_from_code(status_code: int):
 def generate_response_message(protocol: str, status_code: int, extra_headers_lines: str, status_only: bool, body=None):
     status_message = get_status_message_from_code(status_code)
  
-    status_line = f"{protocol} {status_code} {status_message}\r\n\r\n"
+    status_line = f"{protocol} {status_code} {status_message}\r\n"
     print(status_line)
     if status_only:
         return status_line
