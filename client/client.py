@@ -47,7 +47,7 @@ def receive_file(filename, data):
 
 def process_get(route,host, protocol = 'HTTP/1.1'):
     status_line = f'GET {route} {protocol}\r\n'
-    host_line = f'Host: {host}\r\n'
+    host_line = f'Host: {host}'
     message = status_line + host_line + "\r\n"
     return message
 
