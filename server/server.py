@@ -42,7 +42,7 @@ def recvall(conn):
     print(header.decode())
 
     if request_type == 'GET':
-        file = transfer_file(filename)
+        file = transfer_file(filename.decode())
         if file != -1:
             response = rg.get_response_by_verb(http_type, request_type, True, file)
              # Send data back to client
