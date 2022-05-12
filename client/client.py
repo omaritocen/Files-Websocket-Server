@@ -22,9 +22,13 @@ def recvall():
 
 def transfer_file(filename):
     try:
-        #TODO handle file extension
-        file = open(filename, "r")
-        return file.read().encode(FORMAT)
+        ext = filename.split('.')[1]
+        if(ext=='jpg' or ext=='png'):
+           file = open(filename, "rb")
+           return file.read()
+        else:    
+            file = open(filename, "r")
+            return file.read().encode(FORMAT)
     except FileNotFoundError:
         print(f"{filename} doesn't exist")
     except IOError as e:
@@ -69,7 +73,7 @@ with open('input_file.txt') as f:
         route = words[1]
         host = words[2]
         port = int(words[3])
-        filename = route.split('/')[2]
+        filename = route.split('/')[-1]
         # Initiate client socket
         clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clientSocket.connect((host, port))

@@ -31,22 +31,62 @@ def recvall(conn):
         print(f"{c}: {request}")
         c += 1
         full_request += request
-    full_request = full_request.decode()
-    return full_request
+
+    lines = full_request.split(b"\r\n")
+    words = lines[0].split(b" ")
+    request_type = words[0].decode()
+    filename = words[1].split(b'/')[-1]
+    http_type = words[2].decode()
+    ext = filename.split(b".")[1]
+    header = full_request.split(b"\r\n\r\n")[0]
+    print(header.decode())
+
+    if request_type == 'GET':
+        file = transfer_file(filename)
+        if file != -1:
+            response = rg.get_response_by_verb(http_type, request_type, True, file)
+             # Send data back to client
+            conn.send(response)
+        else:
+            response = rg.get_response_by_verb(http_type, request_type, False)
+            # Send data back to client
+            conn.send(response)
+
+    else:
+        #handle images
+        if(ext.decode()=="jpg" or ext.decode()=="png"):
+            image = full_request.split(b"\r\n\r\n")[1].split(b"\r\n")[0]
+            receive = receive_file(filename.decode(),image)
+            if receive != -1:
+                response = rg.get_response_by_verb(http_type, request_type, True)
+                conn.send(response.encode(FORMAT))
+            else:
+                response = rg.get_response_by_verb(http_type, request_type, False)
+                conn.send(response.encode(FORMAT))
+        #handle txt and html        
+        else:
+            data = lines[-2].decode()
+            print(data)
+            receive = receive_file(filename.decode(), data)
+            if receive != -1:
+                response = rg.get_response_by_verb(http_type, request_type, True)
+                conn.send(response.encode(FORMAT))
+            else:
+                response = rg.get_response_by_verb(http_type, request_type, False)
+                conn.send(response.encode(FORMAT))
+
 
 
  
 def transfer_file(filename :str):
     try:
-        #TODO handle file extension
-        # ext = filename.split('.')[1]
-        # if(ext=='jpg'):
-        #    file = open(filename, "rb")
-        #    return file.read()
-        # else:    
-        file = open(filename, "r")
-        #Conditioning on file exstesnsion
-        return file.read().encode(FORMAT)
+        ext = filename.split('.')[1]
+        if(ext=='jpg' or ext=='png'):
+           file = open(filename, "rb")
+           return file.read()
+        else:    
+            file = open(filename, "r")
+            return file.read().encode(FORMAT)
     except FileNotFoundError:
         print(f"{filename} doesn't exist")
         return -1
@@ -60,9 +100,14 @@ def transfer_file(filename :str):
  
 def receive_file(filename, data):
     try:
-        file = open(filename, "w")
-        file.write(data)
-        return 0
+        ext = filename.split('.')[1]
+        if(ext=='jpg' or ext=='png'):
+           file = open(filename, "wb")
+           file.write(data)
+        else:   
+           file = open(filename, "w")
+           file.write(data)
+           return 0
     except IOError as e:
         print(f"IOError: {e}")
         return -1
@@ -76,39 +121,8 @@ def handle_client(conn, sender_address):
     print(f'[NEW CONNECTION] recieved message from {sender_address}')
  
     # Recieve data from connection
-    full_request = recvall(conn)
-    print(full_request)
-
-    # Process data
-    lines = full_request.split('\r\n')
-    words = lines[0].split(' ')
-    request_type = words[0]
-    filename = words[1].split('/')[2]
-    http_type = words[2]
- 
-    response = ""
-    if request_type == 'GET':
-        file = transfer_file(filename)
-        if file != -1:
-            response = rg.get_response_by_verb(http_type, request_type, True, file)
-             # Send data back to client
-            conn.send(response)
-        else:
-            response = rg.get_response_by_verb(http_type, request_type, False)
-            # Send data back to client
-            conn.send(response)
-    else:
-        data = lines[-2]
-        print(data)
-        receive = receive_file(filename, data)
-        if receive != -1:
-            response = rg.get_response_by_verb(http_type, request_type, True)
-            conn.send(response.encode(FORMAT))
-        else:
-            response = rg.get_response_by_verb(http_type, request_type, False)
-            conn.send(response.encode(FORMAT))
-
- 
+    recvall(conn)
+  
     # Close client connection
     print(f"[CLOSE CONNECTION] client: {sender_address}")
     conn.close()

@@ -20,7 +20,7 @@ def generate_response_message(protocol: str, status_code: int, extra_headers_lin
         return status_line
  
     # Check if we need extra \r\n
-    lines = [status_line, *extra_headers_lines, "\r\n"]
+    lines = [status_line, *extra_headers_lines]
  
     # if body is not None:
     #     lines.insert(len(lines) - 1, body)
