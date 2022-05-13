@@ -108,7 +108,7 @@ def transfer_file(filename: str):
 def receive_file(filename, data):
     try:
         ext = filename.split('.')[1]
-        if (ext == 'jpg' or ext == 'png'):
+        if ext == 'jpg' or ext == 'png':
             file = open(filename, "wb")
             file.write(data)
         else:
@@ -124,7 +124,7 @@ def receive_file(filename, data):
 
 
 def handle_client(conn, sender_address):
-    print(f'[NEW CONNECTION] recieved message from {sender_address}')
+    print(f'[NEW CONNECTION] received message from {sender_address}')
 
     # Recieve data from connection
     recvall(conn)
@@ -139,10 +139,10 @@ def start():
     print(f'[LISTENING] Server is Listening on {ADDRESS}')
     while True:
         # Blocking wait for user connection
-        conn, sender_addrsss = server.accept()
+        conn, sender_address = server.accept()
 
         # Delegate new connection to the worker
-        thread = threading.Thread(target=handle_client, args=(conn, sender_addrsss))
+        thread = threading.Thread(target=handle_client, args=(conn, sender_address))
         thread.start()
 
         # Printing the total connections which equals to all threads - main 
