@@ -123,15 +123,28 @@ def receive_file(filename, data):
         return -1
 
 
-def handle_client(conn, sender_address):
+def handle_client(conn: socket, sender_address):
     print(f'[NEW CONNECTION] received message from {sender_address}')
 
     # Recieve data from connection
-    recvall(conn)
+    http_type = recvall(conn)
 
-    # Close client connection
-    print(f"[CLOSE CONNECTION] client: {sender_address}")
-    conn.close()
+    if http_type == "HTTP/1.0":
+        conn.close()
+        # Close client connection
+        print(f"[CLOSE CONNECTION] client: {sender_address}")
+    else:
+        conn.settimeout(5)
+
+    while True:
+        try:
+            print('-')
+        except socket.timeout:
+            print(f"[CLOSE CONNECTION] client: {sender_address}")
+            break
+            # conn.close()
+        # Close client connection
+
 
 
 def start():
