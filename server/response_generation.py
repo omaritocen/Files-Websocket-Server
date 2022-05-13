@@ -1,3 +1,4 @@
+import gzip
 FORMAT = 'utf-8'
 
 
@@ -20,7 +21,7 @@ def generate_response_message(protocol: str, status_code: int, extra_headers_lin
         return status_line + "\r\n"
 
     # Check if we need extra \r\n
-    lines = [status_line, *extra_headers_lines, "\r\n"]
+    lines = [status_line, *extra_headers_lines, "\r\n\r\n"]
 
     response_message = ""
     for line in lines:
@@ -38,6 +39,6 @@ def get_response_by_verb(protocol: str, verb: str, success: bool, body: bytes = 
     status_code = 200 if success else 404
 
     if verb == 'GET':
-        return generate_response_message(protocol, status_code, [], False, body)
+        return generate_response_message(protocol, status_code, [f"Content-Length: {len(body)}\n"], False, body)
     elif verb == 'POST':
         return generate_response_message(protocol, status_code, [], True)

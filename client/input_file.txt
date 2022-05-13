@@ -1,3 +1,1 @@
-POST /files/meme.jpg 127.0.0.1 5505
-POST /files/2mb.txt 127.0.0.1 5505
-POST /files/index.html 127.0.0.1 5505
+GET /index.html 127.0.0.1 5505
