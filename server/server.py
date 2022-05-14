@@ -19,81 +19,85 @@ server.bind(ADDRESS)
 print(server.getsockname())
 
 
-def handle_get(filename, http_type, request_type, conn):
-    file = transfer_file(filename)
-    if file != -1:
-        response = rg.get_response_by_verb(http_type, request_type, True, file)
-    else:
-        response = rg.get_response_by_verb(http_type, request_type, False)
-    # Send data back to client
-    conn.send(response)
-
-
-def handle_post(header_lines, headers, ext, filename, http_type, request_type, conn):
-    content_length_line = [x for x in header_lines if x.startswith(b'Content-Length')]
-    content_length = int(content_length_line[0].split(b" ")[1].decode())
-    remaining_content = content_length - len(headers[1])
-    body = headers[1]
-    headers_length = len(headers[0])
-    if content_length >= BUFFER_SIZE - headers_length:
-        while True:
-            request = conn.recv(BUFFER_SIZE)
-            if not request:
-                break
-            body += request
-            remaining_content -= BUFFER_SIZE
-            if remaining_content <= 0:
-                break
-    # handle images
-    if ext == "jpg" or ext == "png":
-        image = body
-        receive = receive_file(filename, image)
-        if receive != -1:
-            response = rg.get_response_by_verb(http_type, request_type, True)
-        else:
-            response = rg.get_response_by_verb(http_type, request_type, False)
-    # handle txt and html
-    else:
-        data = body.decode()
-        receive = receive_file(filename, data)
-        if receive != -1:
-            response = rg.get_response_by_verb(http_type, request_type, True)
-        else:
-            response = rg.get_response_by_verb(http_type, request_type, False)
-    conn.send(response.encode(FORMAT))
-
 
 def recvall(conn):
-    request = conn.recv(BUFFER_SIZE)
 
-    headers = request.split(b"\r\n\r\n")
-    header_lines = headers[0].split(b"\r\n")
+    while True:
 
-    status_line = header_lines[0].decode().split(" ")
-    request_type = status_line[0]
-    filename = status_line[1].split('/')[-1]
-    ext = filename.split(".")[1]
-    http_type = status_line[2]
+        try:
+            request = conn.recv(BUFFER_SIZE)
+            if not request:  
+                print("No request recieved, closing client connection...")
+                conn.close()
+                break
+            
+            headers = request.split(b"\r\n\r\n")
+            header_lines = headers[0].split(b"\r\n")
 
-    if http_type == 'HTTP/1.1':
-        # conn.settimeout(10)
-        # while True:
-        #     if not request:
-        #         break
+            status_line = header_lines[0].decode().split(" ")
+            request_type = status_line[0]
+            filename = status_line[1].split('/')[-1]
+            ext = filename.split(".")[1]
+            http_type = status_line[2]
+        
+            
+            #Check if http is presistent or not
+            if http_type == 'HTTP/1.1':
+                print("HTTP/1.1 Setitng timeout to close...")
+                conn.settimeout(10)    
+                
             # IN CASE OF GET
             if request_type == 'GET':
-                handle_get(filename, http_type, request_type, conn)
+                file = transfer_file(filename)
+                if file != -1:
+                    response = rg.get_response_by_verb(http_type, request_type, True, file)
+                else:
+                    response = rg.get_response_by_verb(http_type, request_type, False)
+                # Send data back to client
+                conn.send(response)
             # IN CASE OF POST
             else:
-                handle_post(header_lines, headers, ext, filename, http_type, request_type, conn)
+                content_length_line = [x for x in header_lines if x.startswith(b'Content-Length')]
+                content_length = int(content_length_line[0].split(b" ")[1].decode())
+                remaining_content = content_length - len(headers[1])
+                body = headers[1]
+                headers_length = len(headers[0])
+                if content_length >= BUFFER_SIZE - headers_length:
+                    while True:
+                        request = conn.recv(BUFFER_SIZE)
+                        if not request:
+                            break
+                        body += request
+                        remaining_content -= BUFFER_SIZE
+                        if remaining_content <= 0:
+                            break
+                # handle images
+                if ext == "jpg" or ext == "png":
+                    image = body
+                    receive = receive_file(filename, image)
+                    if receive != -1:
+                        response = rg.get_response_by_verb(http_type, request_type, True)
+                    else:
+                        response = rg.get_response_by_verb(http_type, request_type, False)
+                # handle txt and html
+                else:
+                    data = body.decode()
+                    receive = receive_file(filename, data)
+                    if receive != -1:
+                        response = rg.get_response_by_verb(http_type, request_type, True)
+                    else:
+                        response = rg.get_response_by_verb(http_type, request_type, False)
+                conn.send(response.encode(FORMAT))
 
-    elif http_type == 'HTTP/1.0':
-        # IN CASE OF GET
-        if request_type == 'GET':
-            handle_get(filename, http_type, request_type, conn)
-        # IN CASE OF POST
-        else:
-            handle_post(header_lines, headers, ext, filename, http_type, request_type, conn)
+                if http_type == 'HTTP/1.0':
+                    print("HTTP/1.0 Closing client connection...")
+                    conn.close()
+                    break
+
+        except socket.timeout:
+            print("Connection timeout reached (10 seconds), closing client socket...")
+            conn.close()
+            break        
 
 
 def transfer_file(filename: str):
@@ -138,9 +142,9 @@ def handle_client(conn, sender_address):
     print(f'[NEW CONNECTION] received message from {sender_address}')
     # Recieve data from connection
     recvall(conn)
-    # Close client connection
+    # conn.close()
     print(f"[CLOSE CONNECTION] client: {sender_address}")
-    conn.close()
+  
 
 
 def start():
