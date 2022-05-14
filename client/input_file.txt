@@ -1,1 +1,1 @@
-GET /files/2mb.txt 127.0.0.1 5505
+POST /files/spiderman.jpg 127.0.0.1 5505
