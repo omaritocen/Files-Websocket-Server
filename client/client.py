@@ -1,32 +1,59 @@
-import select
 import socket
 import sys
-
-
+import gzip
+ 
 BUFFER_SIZE = 4096
 FORMAT = "utf-8"
 
-def recvall():
-    full_request = b""
-    c = 0
-    while True:
-        request = clientSocket.recv(BUFFER_SIZE)
-        if not request:
-            break
-        print(f"{c}: {request}")
-        c += 1
-        full_request += request
-    full_request = full_request.decode()
-    return full_request
-    
-
+def validate_ip(s):
+    a = s.split('.')
+    if len(a) != 4:
+        return False
+    for x in a:
+        if not x.isdigit():
+            return False
+        i = int(x)
+        if i < 0 or i > 255:
+            return False
+    return True
+ 
+ 
+def recvall(conn, ext):
+    request = conn.recv(BUFFER_SIZE)
+    lines = request.split(b"\r\n")
+    content_length_line = [x for x in lines if x.startswith(b'Content-Length')]
+    content_encoding_line = [x for x in lines if x.startswith(b'Content-Encoding')]
+    content_length = int(content_length_line[0].split(b" ")[1].decode())
+    header_body_split = request.split(b"\r\n")
+    status_code = header_body_split[0].split(b" ")[1].decode()
+    body = request.split(b"\r\n\r\n")[1]
+    print(body)
+    remaining_content = content_length - len(body)
+    headers_length = len(header_body_split[0] + header_body_split[1])
+    if content_length >= BUFFER_SIZE - headers_length or body == b'' and status_code == '200':
+        while True:
+            request = conn.recv(BUFFER_SIZE)
+            # if not request:
+            #     break
+            body += request
+ 
+            remaining_content -= len(request)
+            print(remaining_content)
+            if remaining_content <= 0:
+                break
+    if(len(content_encoding_line) > 0):
+        if(content_encoding_line[0].split(b" ")[1].decode() == 'gzip'):
+            body = gzip.decompress(body)
+    return body
+ 
+ 
 def transfer_file(filename):
     try:
         ext = filename.split('.')[1]
-        if(ext=='jpg' or ext=='png'):
-           file = open(filename, "rb")
-           return file.read()
-        else:    
+        if ext == 'jpg' or ext == 'png':
+            file = open(filename, "rb")
+            return file.read()
+        else:
             file = open(filename, "r")
             return file.read().encode(FORMAT)
     except FileNotFoundError:
@@ -35,92 +62,86 @@ def transfer_file(filename):
         print(f"IOError: {e}")
     except:
         print(f"Unexpected Error: {sys.exc_info()[0]}")
-
-
-
+ 
+ 
 def receive_file(filename, data):
     try:
-        file = open(filename, "w")
+        file = open(filename, "wb")
         file.write(data)
     except IOError as e:
         print(f"IOError: {e}")
     except:
         print(f"Unexpected Error: {sys.exc_info()[0]}")
-
-
-
-def process_get(route,host, protocol = 'HTTP/1.1'):
+ 
+ 
+def process_get(route, host, protocol='HTTP/1.1'):
     status_line = f'GET {route} {protocol}\r\n'
-    host_line = f'Host: {host}'
-    message = status_line + host_line + "\r\n"
+    host_line = f'Host: {host}\r\n'
+    encoding = "Accept-Encoding: gzip, deflate, br\r\n"
+    message = status_line + host_line + encoding + "\r\n"
     return message
-
-
-
-def process_post(route, host, protocol = 'HTTP/1.1'):
+ 
+ 
+def process_post(route, host, file_size, protocol='HTTP/1.1', ):
     status_line = f'POST {route} {protocol}\r\n'
     host_line = f'Host: {host}\r\n'
-    # content_type = "multipart/form-data"
-    message = status_line + host_line + "\r\n"
+    content_length = f'Content-Length: {file_size}\r\n'
+    message = status_line + host_line + content_length + "\r\n"
     return message
-
-
+ 
+ 
 with open('input_file.txt') as f:
-
     for line in f:
         words = line.split(" ", 3)
         request_type = words[0]
         route = words[1]
         host = words[2]
-        port = int(words[3])
+        port = 80
+        if(len(words) == 4):
+            port = int(words[3])
         filename = route.split('/')[-1]
+
+        isIp = validate_ip(host)
+        if not isIp:
+            host_ip = socket.gethostbyname(host)
+        else:
+            host_ip = host
         # Initiate client socket
         clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        clientSocket.connect((host, port))
-
-        
+        clientSocket.connect((host_ip, port))
+ 
         if request_type == 'GET':
             get_message = process_get(route, host)
-            print(get_message)
             # Send the request to the server
-            clientSocket.send(get_message.encode(FORMAT))
+            clientSocket.sendall(get_message.encode(FORMAT))
             # Decode received socket
-
-            full_response = recvall()
-            print(full_response)
-
-            # Process data
-            lines = full_response.split('\r\n')
-            words = lines[0].split(' ')
-            http_type = words[0]
-            status_code = words[1]
-            status_message = words[2]
-            data = lines[-2]
-            receive = receive_file(filename, data)
-
-
-        elif request_type == 'POST' :
-            
+ 
+            data = recvall(clientSocket, filename.split(".")[-1])
+ 
+            receive_file(filename, data)
+ 
+ 
+        elif request_type == 'POST':
+ 
             data = transfer_file(filename)
-            header = process_post(route,host)
+            file_size = len(data)
+            header = process_post(route, host, file_size)
             post_message = header.encode(FORMAT) + data + b"\r\n"
             # Send the request to the server
-
+ 
             clientSocket.sendall(post_message)
             # Decode received socket
-
+ 
             received_sentence = clientSocket.recv(BUFFER_SIZE)
             decoded_sentence = received_sentence.decode()
-
+ 
             # Print the result
             print(decoded_sentence)
-
+ 
         print('')
         print('------------------------------------')
-
-
-
+ 
 clientSocket.close()
 print('[CLIENT PROCESS ENDED]')
-
+ 
 # Close the connection
