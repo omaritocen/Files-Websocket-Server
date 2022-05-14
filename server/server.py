@@ -89,10 +89,10 @@ def recvall(conn):
                         response = rg.get_response_by_verb(http_type, request_type, False)
                 conn.send(response.encode(FORMAT))
 
-                if http_type == 'HTTP/1.0':
-                    print("HTTP/1.0 Closing client connection...")
-                    conn.close()
-                    break
+            if http_type == 'HTTP/1.0':
+                print("HTTP/1.0 Closing client connection...")
+                conn.close()
+                break
 
         except socket.timeout:
             print("Connection timeout reached (10 seconds), closing client socket...")
