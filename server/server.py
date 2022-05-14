@@ -90,7 +90,7 @@ def recvall(conn):
                 conn.send(response.encode(FORMAT))
 
                 if http_type == 'HTTP/1.0':
-                    print("HTTP/1.0 Closing client socket...")
+                    print("HTTP/1.0 Closing client connection...")
                     conn.close()
                     break
 
@@ -142,20 +142,9 @@ def handle_client(conn, sender_address):
     print(f'[NEW CONNECTION] received message from {sender_address}')
     # Recieve data from connection
     recvall(conn)
-    
-    conn.close()
+    # conn.close()
     print(f"[CLOSE CONNECTION] client: {sender_address}")
-    
-           
-
-    # while True:
-    #     try:
-    #         print('-')
-    #     except socket.timeout:
-    #         print(f"[CLOSE CONNECTION] client: {sender_address}")
-    #         break
-    #         # conn.close()
-    #     # Close client connection
+  
 
 
 def start():
