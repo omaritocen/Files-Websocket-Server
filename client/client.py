@@ -26,7 +26,14 @@ def recvall(conn, ext):
     content_length = int(content_length_line[0].split(b" ")[1].decode())
     header_body_split = request.split(b"\r\n")
     status_code = header_body_split[0].split(b" ")[1].decode()
-    body = request.split(b"\r\n")[-1]
+    print(header_body_split[0].decode())
+    if(status_code != '200'):
+        return -1
+
+    body = header_body_split[-1]
+    test = request.split(b"\r\n\r\n")
+    if(len(test) > 1):
+        body = test[-1]
     # print(body)
     remaining_content = content_length - len(body)
     headers_length = len(header_body_split[0] + header_body_split[1])
@@ -117,7 +124,8 @@ with open('input_file.txt') as f:
             # Decode received socket
  
             data = recvall(clientSocket, filename.split(".")[-1])
- 
+            if data == -1:
+                continue
             receive_file(filename, data)
  
  

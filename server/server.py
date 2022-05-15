@@ -36,10 +36,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                 except socket.error:
                     break
                 if request:
-                    # print(request)
-                    # print("No request recieved, closing client connection...")
-                    # conn.close()
-                    # break
+                    print(request)
                     
                     headers = request.split(b"\r\n\r\n")
                     header_lines = headers[0].split(b"\r\n")

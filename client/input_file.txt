@@ -1,1 +1,1 @@
-GET /index.html 127.0.0.1 5505
+GET /images/branding/googlelogo/1x/googlelogo_color_272x92dp.png www.google.com 80
