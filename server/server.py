@@ -1,3 +1,4 @@
+from multiprocessing import Semaphore
 import socket
 import threading
 import sys
@@ -16,6 +17,7 @@ HOST = socket.gethostbyname("localhost")
 ADDRESS = (HOST, PORT)
 server.bind(ADDRESS)
 print(server.getsockname())
+semaphore = Semaphore(1)
 
 
 # def create_child_thread():
@@ -56,7 +58,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                         persistent_connection = True
                         print("HTTP/1.1 Setitng timeout to close...")
                         print("We are in persistent connection")    
-                        
+                    semaphore.acquire()
                     # IN CASE OF GET
                     if request_type == 'GET':
                         file = transfer_file(filename)
@@ -66,6 +68,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                             response = rg.get_response_by_verb(http_type, request_type, False)
                         # Send data back to client
                         conn.send(response)
+                        semaphore.release()
                     # IN CASE OF POST
                     else:
                         content_length_line = [x for x in header_lines if x.startswith(b'Content-Length')]
@@ -99,6 +102,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                             else:
                                 response = rg.get_response_by_verb(http_type, request_type, False)
                         conn.send(response.encode(FORMAT))
+                        semaphore.release()
                         thread.kill()
                         
                     if http_type == 'HTTP/1.0':
