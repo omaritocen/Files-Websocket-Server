@@ -19,17 +19,18 @@ print(server.getsockname())
 
 # def create_child_thread():
     
-def recvall(conn):
+def recvall(conn,connections):
 
     persistent_connection = False
     with conn:
-        conn.settimeout(5)
+        timeout = 10 - 0.5 * connections
+        conn.settimeout(timeout)
         while True:
             try: 
                 request = conn.recv(BUFFER_SIZE)
                 if request:
-                    # threading.Thread(target=recvall, args=(conn,)).start()
-                    print("here!!!!!!!!!!!!!!!!!!!!!!")  
+                    # threading.Thread(target=recvall, args=(conn,connections)).start()
+                    # print("here!!!!!!!!!!!!!!!!!!!!!!")  
                     # print(request)
                     # print("No request recieved, closing client connection...")
                     # conn.close()
@@ -48,8 +49,8 @@ def recvall(conn):
                     #Check if http is presistent or not
                     if http_type == 'HTTP/1.1' and persistent_connection == False:
                         persistent_connection = True
-                        print("HTTP/1.1 Setitng timeout to close...")
-                        print("We are in persistent connection")    
+                        print(f"HTTP/1.1 Setitng timeout to ({timeout}) to close...")
+                        # print("We are in persistent connection")    
                         
                     # IN CASE OF GET
                     if request_type == 'GET':
@@ -102,10 +103,10 @@ def recvall(conn):
                     conn.close()
                     break  
             except socket.timeout:
-                print("Connection timeout reached (5 seconds), closing client socket...")
+                print(f"Connection timeout reached ({timeout}) seconds), closing client socket...")
                 conn.close()
                 break   
-        print("break 1 from the while loop")        
+        # print("break 1 from the while loop")        
 
 
 def transfer_file(filename: str):
@@ -146,10 +147,10 @@ def receive_file(filename, data):
         return -1
 
 
-def handle_client(conn, sender_address):
+def handle_client(conn, sender_address , connections):
     print(f'[NEW CONNECTION] received message from {sender_address}')
     # Recieve data from connection
-    recvall(conn)
+    recvall(conn, connections)
     # conn.close()
     print(f"[CLOSE CONNECTION] client: {sender_address}")
   
@@ -158,11 +159,13 @@ def handle_client(conn, sender_address):
 def start():
     server.listen(MAX_CONNECTIONS)
     print(f'[LISTENING] Server is Listening on {ADDRESS}')
+    connections = 0
     while True:
         # Blocking wait for user connection
         conn, sender_address = server.accept()
+        connections += 1
         # Delegate new connection to the worker
-        thread = threading.Thread(target=handle_client, args=(conn, sender_address))
+        thread = threading.Thread(target=handle_client, args=(conn, sender_address, connections))
         thread.start()
 
         # Printing the total connections which equals to all threads - main 
