@@ -21,7 +21,7 @@ def generate_response_message(protocol: str, status_code: int, extra_headers_lin
         return status_line + "\r\n"
 
     # Check if we need extra \r\n
-    lines = [status_line, *extra_headers_lines, "\r\n\r\n"]
+    lines = [status_line, *extra_headers_lines, "\r\n"]
 
     response_message = ""
     for line in lines:
