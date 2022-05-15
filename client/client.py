@@ -34,7 +34,7 @@ def recvall(conn, ext):
 
     body = header_body_split[-1]
     test = request.split(b"\r\n\r\n")
-    if(len(test) > 1):
+    if(test is not None and len(test) > 1):
         body = test[-1]
     # print(body)
     remaining_content = content_length - len(body)
@@ -137,7 +137,7 @@ with open('input_file.txt') as f:
                 if get_message in request_cache:
                     # filename = filename_if_exists
                     print("Found File name in cache no need to get it from the server")
-                    print(request_cache[get_message])
+                    print(request_cache[get_message].decode())
                 else:
                     
                     clientSocket = open_connection(host)

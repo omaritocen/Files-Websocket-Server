@@ -1,5 +1,5 @@
 GET files/spiderman.jpg 127.0.0.1 5505
 GET files/meme.jpg 127.0.0.1 5505
-POST files/google.jpg 127.0.0.1 5505
+POST files/google.png 127.0.0.1 5505
 GET files/meme.jpg 127.0.0.1 5505
 POST files/index.html 127.0.0.1 5505
