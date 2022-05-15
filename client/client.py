@@ -5,7 +5,7 @@ import gzip
 BUFFER_SIZE = 4096
 FORMAT = "utf-8"
 
-file_cache = []
+request_cache = {}
 
 def validate_ip(s):
     a = s.split('.')
@@ -53,7 +53,7 @@ def recvall(conn, ext):
     if(len(content_encoding_line) > 0):
         if(content_encoding_line[0].split(b" ")[1].decode() == 'gzip'):
             body = gzip.decompress(body)
-    return body
+    return body, header_body_split[0]
 
 
 def transfer_file(filename):
@@ -131,20 +131,21 @@ with open('input_file.txt') as f:
         
 
         if request_type == 'GET':
-
-            filename_if_exists = get_filename_if_exists(route)
-            if filename_if_exists != "":
-                if filename_if_exists in file_cache:
+            get_message = process_get(route, host)
+            # request_if_exists = get_filename_if_exists(route)
+            if get_message != "":
+                if get_message in request_cache:
                     # filename = filename_if_exists
                     print("Found File name in cache no need to get it from the server")
+                    print(request_cache[get_message])
                 else:
-                    file_cache.append(filename_if_exists)
-                    get_message = process_get(route, host)
+                    
                     clientSocket = open_connection(host)
                     # Send the request to the server
                     clientSocket.sendall(get_message.encode(FORMAT))
                     # Decode received socket
-                    data = recvall(clientSocket, filename.split(".")[-1])
+                    data , response = recvall(clientSocket, filename.split(".")[-1])
+                    request_cache[get_message] = response
                     receive_file(filename, data)
 
         elif request_type == 'POST':
