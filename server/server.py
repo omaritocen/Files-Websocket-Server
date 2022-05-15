@@ -23,6 +23,7 @@ def recvall(conn):
 
     persistent_connection = False
     with conn:
+        conn.settimeout(5)
         while True:
             try: 
                 request = conn.recv(BUFFER_SIZE)
@@ -100,9 +101,9 @@ def recvall(conn):
                     conn.close()
                     break       
             except socket.timeout:
-                print("Connection timeout reached (10 seconds), closing client socket...")
+                print("Connection timeout reached (5 seconds), closing client socket...")
                 conn.close()
-                break    
+                break   
         print("break 1 from the while loop")        
 
 
@@ -159,7 +160,6 @@ def start():
     while True:
         # Blocking wait for user connection
         conn, sender_address = server.accept()
-        conn.settimeout(5)
         # Delegate new connection to the worker
         thread = threading.Thread(target=handle_client, args=(conn, sender_address))
         thread.start()
