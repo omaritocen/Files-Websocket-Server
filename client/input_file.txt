@@ -1,1 +1,2 @@
-GET /index.html 127.0.0.1 5505
+GET /spiderman.jpg 127.0.0.1 5505
+GET /spiderman.jpg 127.0.0.1 5505

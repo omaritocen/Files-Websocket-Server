@@ -165,7 +165,7 @@ def receive_file(filename, data):
 def handle_client(conn, sender_address , connections):
     print(f'[NEW CONNECTION] received message from {sender_address}')
     # Recieve data from connection
-    recvall(conn, True, sender_address, connections)
+    recvall(conn, True, sender_address)
     # conn.close()
     print(f"[CLOSE CONNECTION] client: {sender_address}")
   
@@ -183,10 +183,8 @@ def start():
         # Delegate new connection to the worker
         thread = threading.Thread(target=handle_client, args=(conn, sender_address, connections))
         thread.start()
-        number_of_connections +=1
-
         # Printing the total connections which equals to all threads - main 
-        print(f"[ACTIVE CONNECTIONS] {number_of_connections}")
+        print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
 
 
 print('[STARTING] SERVER IS STARTING')
