@@ -27,6 +27,7 @@ def recvall(conn):
             try: 
                 request = conn.recv(BUFFER_SIZE)
                 if request:
+                    # threading.Thread(target=recvall, args=(conn,)).start()
                     print("here!!!!!!!!!!!!!!!!!!!!!!")  
                     # print(request)
                     # print("No request recieved, closing client connection...")
@@ -98,7 +99,7 @@ def recvall(conn):
                         break
                 else:
                     conn.close()
-                    break       
+                    break  
             except socket.timeout:
                 print("Connection timeout reached (10 seconds), closing client socket...")
                 conn.close()
