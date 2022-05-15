@@ -1,9 +1,11 @@
 import socket
 import sys
 import gzip
- 
+
 BUFFER_SIZE = 4096
 FORMAT = "utf-8"
+
+file_cache = []
 
 def validate_ip(s):
     a = s.split('.')
@@ -16,8 +18,8 @@ def validate_ip(s):
         if i < 0 or i > 255:
             return False
     return True
- 
- 
+
+
 def recvall(conn, ext):
     request = conn.recv(BUFFER_SIZE)
     lines = request.split(b"\r\n")
@@ -43,7 +45,7 @@ def recvall(conn, ext):
             if not request:
                 break
             body += request
- 
+
             remaining_content -= len(request)
             # print(remaining_content)
             if remaining_content <= 0:
@@ -52,8 +54,8 @@ def recvall(conn, ext):
         if(content_encoding_line[0].split(b" ")[1].decode() == 'gzip'):
             body = gzip.decompress(body)
     return body
- 
- 
+
+
 def transfer_file(filename):
     try:
         ext = filename.split('.')[1]
@@ -69,8 +71,8 @@ def transfer_file(filename):
         print(f"IOError: {e}")
     except:
         print(f"Unexpected Error: {sys.exc_info()[0]}")
- 
- 
+
+
 def receive_file(filename, data):
     try:
         file = open(filename, "wb")
@@ -95,16 +97,24 @@ def process_post(route, host, file_size, protocol='HTTP/1.0', ):
     content_length = f'Content-Length: {file_size}\r\n'
     message = status_line + host_line + content_length + "\r\n"
     return message
- 
- 
+
+def get_filename_if_exists(route):
+    try:
+        f_name = route.split('/')[-1]
+        return f_name
+    except:
+        return ""
+
+
 with open('input_file.txt') as f:
     for line in f:
         words = line.split(" ", 3)
         request_type = words[0]
+        print("here")
         route = words[1]
         host = words[2]
         port = 80
-        if(len(words) == 4):
+        if len(words) == 4:
             port = int(words[3])
         filename = route.split('/')[-1]
 
@@ -116,40 +126,44 @@ with open('input_file.txt') as f:
         # Initiate client socket
         clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clientSocket.connect((host_ip, port))
- 
+
         if request_type == 'GET':
-            get_message = process_get(route, host)
-            # Send the request to the server
-            clientSocket.sendall(get_message.encode(FORMAT))
-            # Decode received socket
- 
-            data = recvall(clientSocket, filename.split(".")[-1])
-            if data == -1:
-                continue
-            receive_file(filename, data)
- 
- 
+
+            filename_if_exists = get_filename_if_exists(route)
+            if filename_if_exists != "":
+                if filename_if_exists in file_cache:
+                    # filename = filename_if_exists
+                    print("Found File name in cache no need to get it from the server")
+                else:
+                    file_cache.append(filename_if_exists)
+                    get_message = process_get(route, host)
+                    # Send the request to the server
+                    clientSocket.sendall(get_message.encode(FORMAT))
+                    # Decode received socket
+                    data = recvall(clientSocket, filename.split(".")[-1])
+                    receive_file(filename, data)
+
         elif request_type == 'POST':
- 
+
             data = transfer_file(filename)
             file_size = len(data)
             header = process_post(route, host, file_size)
             post_message = header.encode(FORMAT) + data + b"\r\n"
             # Send the request to the server
- 
+
             clientSocket.sendall(post_message)
             # Decode received socket
- 
+
             received_sentence = clientSocket.recv(BUFFER_SIZE)
             decoded_sentence = received_sentence.decode()
- 
+
             # Print the result
             print(decoded_sentence)
- 
+
         print('')
         print('------------------------------------')
- 
+
 clientSocket.close()
 print('[CLIENT PROCESS ENDED]')
- 
+
 # Close the connection

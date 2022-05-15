@@ -28,7 +28,9 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
     thread = None
     with conn:
         if is_main_client_thread:
+            # timeout = 10 - 0.5 * connections
             conn.settimeout(5)
+            
         while True:
             try: 
                 try:
@@ -109,13 +111,13 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                         break
                 else:
                     conn.close()
-                    break       
+                    break  
             except socket.timeout:
-                print("Connection timeout reached (5 seconds), closing client socket...")
+                print("Connection timeout reached (5) seconds, closing client socket...")
                 thread.kill()
                 conn.close()
                 break   
-           
+        # print("break 1 from the while loop")        
 
 
 def transfer_file(filename: str):
@@ -162,7 +164,7 @@ def receive_file(filename, data):
         return -1
 
 
-def handle_client(conn, sender_address):
+def handle_client(conn, sender_address , connections):
     print(f'[NEW CONNECTION] received message from {sender_address}')
     # Recieve data from connection
     recvall(conn, True, sender_address)
@@ -175,16 +177,16 @@ def start():
     number_of_connections = 0
     server.listen(MAX_CONNECTIONS)
     print(f'[LISTENING] Server is Listening on {ADDRESS}')
+    connections = 0
     while True:
         # Blocking wait for user connection
         conn, sender_address = server.accept()
+        connections += 1
         # Delegate new connection to the worker
-        thread = threading.Thread(target=handle_client, args=(conn, sender_address))
+        thread = threading.Thread(target=handle_client, args=(conn, sender_address, connections))
         thread.start()
-        number_of_connections +=1
-
         # Printing the total connections which equals to all threads - main 
-        print(f"[ACTIVE CONNECTIONS] {number_of_connections}")
+        print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
 
 
 print('[STARTING] SERVER IS STARTING')
