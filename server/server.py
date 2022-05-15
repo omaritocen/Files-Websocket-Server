@@ -1,3 +1,4 @@
+from multiprocessing import Semaphore
 import socket
 import threading
 import sys
@@ -8,6 +9,7 @@ MAX_CONNECTIONS = 5
 PORT = 5505
 BUFFER_SIZE = 4096
 FORMAT = "utf-8"
+number_of_connections = 0
 
 # Setup Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -15,20 +17,27 @@ HOST = socket.gethostbyname("localhost")
 ADDRESS = (HOST, PORT)
 server.bind(ADDRESS)
 print(server.getsockname())
+semaphore = Semaphore(1)
 
 
 # def create_child_thread():
     
-def recvall(conn):
-
+def recvall(conn, is_main_client_thread: bool, sender_address):
+    print("New Thread Started for Client: {}".format(sender_address))
     persistent_connection = False
+    thread = None
     with conn:
-        conn.settimeout(5)
+        if is_main_client_thread:
+            conn.settimeout(5)
         while True:
             try: 
-                request = conn.recv(BUFFER_SIZE)
+                try:
+                    request = conn.recv(BUFFER_SIZE)
+                except socket.error:
+                    break
                 if request:
-                    print("here!!!!!!!!!!!!!!!!!!!!!!")  
+                    thread = threading.Thread(target=recvall, args=(conn, False, sender_address))
+                    thread.start()
                     # print(request)
                     # print("No request recieved, closing client connection...")
                     # conn.close()
@@ -49,7 +58,7 @@ def recvall(conn):
                         persistent_connection = True
                         print("HTTP/1.1 Setitng timeout to close...")
                         print("We are in persistent connection")    
-                        
+                    semaphore.acquire()
                     # IN CASE OF GET
                     if request_type == 'GET':
                         file = transfer_file(filename)
@@ -59,6 +68,7 @@ def recvall(conn):
                             response = rg.get_response_by_verb(http_type, request_type, False)
                         # Send data back to client
                         conn.send(response)
+                        semaphore.release()
                     # IN CASE OF POST
                     else:
                         content_length_line = [x for x in header_lines if x.startswith(b'Content-Length')]
@@ -92,6 +102,8 @@ def recvall(conn):
                             else:
                                 response = rg.get_response_by_verb(http_type, request_type, False)
                         conn.send(response.encode(FORMAT))
+                        semaphore.release()
+                        thread.kill()
                         
                     if http_type == 'HTTP/1.0':
                         print("HTTP/1.0 Closing client connection...")
@@ -102,9 +114,10 @@ def recvall(conn):
                     break       
             except socket.timeout:
                 print("Connection timeout reached (5 seconds), closing client socket...")
+                thread.kill()
                 conn.close()
                 break   
-        print("break 1 from the while loop")        
+           
 
 
 def transfer_file(filename: str):
@@ -112,10 +125,14 @@ def transfer_file(filename: str):
         ext = filename.split('.')[1]
         if ext == 'jpg' or ext == 'png':
             file = open(filename, "rb")
-            return file.read()
+            data = file.read()
+            file.close()
+            return data
         else:
             file = open(filename, "r")
-            return file.read().encode(FORMAT)
+            data = file.read().encode(FORMAT)
+            file.close()
+            return data
     except FileNotFoundError:
         print(f"{filename} doesn't exist")
         return -1
@@ -133,9 +150,11 @@ def receive_file(filename, data):
         if ext == 'jpg' or ext == 'png':
             file = open(filename, "wb")
             file.write(data)
+            file.close()
         else:
             file = open(filename, "w")
             file.write(data)
+            file.close()
             return 0
     except IOError as e:
         print(f"IOError: {e}")
@@ -148,13 +167,14 @@ def receive_file(filename, data):
 def handle_client(conn, sender_address):
     print(f'[NEW CONNECTION] received message from {sender_address}')
     # Recieve data from connection
-    recvall(conn)
+    recvall(conn, True, sender_address)
     # conn.close()
     print(f"[CLOSE CONNECTION] client: {sender_address}")
   
 
 
 def start():
+    number_of_connections = 0
     server.listen(MAX_CONNECTIONS)
     print(f'[LISTENING] Server is Listening on {ADDRESS}')
     while True:
@@ -163,9 +183,10 @@ def start():
         # Delegate new connection to the worker
         thread = threading.Thread(target=handle_client, args=(conn, sender_address))
         thread.start()
+        number_of_connections +=1
 
         # Printing the total connections which equals to all threads - main 
-        print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
+        print(f"[ACTIVE CONNECTIONS] {number_of_connections}")
 
 
 print('[STARTING] SERVER IS STARTING')
