@@ -105,27 +105,30 @@ def get_filename_if_exists(route):
     except:
         return ""
 
+def open_connection(host):
+    isIp = validate_ip(host)
+    if not isIp:
+        host_ip = socket.gethostbyname(host)
+    else:
+        host_ip = host
+    # Initiate client socket
+    clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientSocket.connect((host_ip, port))
+
+    return clientSocket
+
 
 with open('input_file.txt') as f:
     for line in f:
         words = line.split(" ", 3)
         request_type = words[0]
-        print("here")
         route = words[1]
         host = words[2]
         port = 80
         if len(words) == 4:
             port = int(words[3])
         filename = route.split('/')[-1]
-
-        isIp = validate_ip(host)
-        if not isIp:
-            host_ip = socket.gethostbyname(host)
-        else:
-            host_ip = host
-        # Initiate client socket
-        clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        clientSocket.connect((host_ip, port))
+        
 
         if request_type == 'GET':
 
@@ -137,6 +140,7 @@ with open('input_file.txt') as f:
                 else:
                     file_cache.append(filename_if_exists)
                     get_message = process_get(route, host)
+                    clientSocket = open_connection(host)
                     # Send the request to the server
                     clientSocket.sendall(get_message.encode(FORMAT))
                     # Decode received socket
@@ -144,7 +148,8 @@ with open('input_file.txt') as f:
                     receive_file(filename, data)
 
         elif request_type == 'POST':
-
+            
+            clientSocket = open_connection(host)
             data = transfer_file(filename)
             file_size = len(data)
             header = process_post(route, host, file_size)
