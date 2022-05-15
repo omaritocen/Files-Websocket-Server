@@ -35,14 +35,13 @@ def recvall(conn, is_main_client_thread: bool, sender_address, connections=0):
             try: 
                 try:
                     request = conn.recv(BUFFER_SIZE)
+                    semaphore.acquire()
                 except socket.error:
                     break
                 if request:
-                    print(request)
-                    
                     headers = request.split(b"\r\n\r\n")
                     header_lines = headers[0].split(b"\r\n")
-
+                    print(header_lines[0].decode(FORMAT))
                     status_line = header_lines[0].decode().split(" ")
                     request_type = status_line[0]
                     filename = status_line[1].split('/')[-1]
@@ -55,11 +54,12 @@ def recvall(conn, is_main_client_thread: bool, sender_address, connections=0):
                         persistent_connection = True
                         print(f"HTTP/1.1 Setitng timeout to close...")
                         print("We are in persistent connection") 
-                        thread = threading.Thread(target=recvall, args=(conn, False, sender_address))
-                        thread.start()   
-                    semaphore.acquire()
+                        
                     # IN CASE OF GET
                     if request_type == 'GET':
+                        if persistent_connection:
+                            thread = threading.Thread(target=recvall, args=(conn, False, sender_address))
+                            thread.start()
                         file = transfer_file(filename)
                         if file != -1:
                             response = rg.get_response_by_verb(http_type, request_type, True, file)
@@ -84,6 +84,9 @@ def recvall(conn, is_main_client_thread: bool, sender_address, connections=0):
                                 remaining_content -= BUFFER_SIZE
                                 if remaining_content <= 0:
                                     break
+                        if persistent_connection:
+                            thread = threading.Thread(target=recvall, args=(conn, False, sender_address))
+                            thread.start()
                         # handle images
                         if ext == "jpg" or ext == "png":
                             image = body
@@ -102,7 +105,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address, connections=0):
                                 response = rg.get_response_by_verb(http_type, request_type, False)
                         conn.send(response.encode(FORMAT))
                         semaphore.release()
-                        if thread is not None:
+                        if thread is not None and not thread.is_alive() and not is_main_client_thread:
                             thread.kill()
                         
                     if http_type == 'HTTP/1.0':
@@ -115,7 +118,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address, connections=0):
             except socket.timeout:
                 print(f"Connection timeout reached ({timeout}) seconds, closing client socket...")
                 thread.kill()
-                conn.close()
+                conn.close()    
                 break   
         # print("break 1 from the while loop")        
 
