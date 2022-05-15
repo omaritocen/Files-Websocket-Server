@@ -1,3 +1,4 @@
+from multiprocessing import Semaphore
 import socket
 import threading
 import sys
@@ -16,6 +17,7 @@ HOST = socket.gethostbyname("localhost")
 ADDRESS = (HOST, PORT)
 server.bind(ADDRESS)
 print(server.getsockname())
+semaphore = Semaphore(1)
 
 
 # def create_child_thread():
@@ -36,12 +38,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                 except socket.error:
                     break
                 if request:
-                    thread = threading.Thread(target=recvall, args=(conn, False, sender_address))
-                    thread.start()
-                    # print(request)
-                    # print("No request recieved, closing client connection...")
-                    # conn.close()
-                    # break
+                    print(request)
                     
                     headers = request.split(b"\r\n\r\n")
                     header_lines = headers[0].split(b"\r\n")
@@ -56,9 +53,11 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                     #Check if http is presistent or not
                     if http_type == 'HTTP/1.1' and persistent_connection == False:
                         persistent_connection = True
-                        print(f"HTTP/1.1 Setitng timeout to (5) to close...")
-                        # print("We are in persistent connection")    
-                        
+                        print("HTTP/1.1 Setitng timeout to close...")
+                        print("We are in persistent connection") 
+                        thread = threading.Thread(target=recvall, args=(conn, False, sender_address))
+                        thread.start()   
+                    semaphore.acquire()
                     # IN CASE OF GET
                     if request_type == 'GET':
                         file = transfer_file(filename)
@@ -68,6 +67,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                             response = rg.get_response_by_verb(http_type, request_type, False)
                         # Send data back to client
                         conn.send(response)
+                        semaphore.release()
                     # IN CASE OF POST
                     else:
                         content_length_line = [x for x in header_lines if x.startswith(b'Content-Length')]
@@ -101,7 +101,9 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                             else:
                                 response = rg.get_response_by_verb(http_type, request_type, False)
                         conn.send(response.encode(FORMAT))
-                        thread.kill()
+                        semaphore.release()
+                        if thread is not None:
+                            thread.kill()
                         
                     if http_type == 'HTTP/1.0':
                         print("HTTP/1.0 Closing client connection...")

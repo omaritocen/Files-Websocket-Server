@@ -28,19 +28,26 @@ def recvall(conn, ext):
     content_length = int(content_length_line[0].split(b" ")[1].decode())
     header_body_split = request.split(b"\r\n")
     status_code = header_body_split[0].split(b" ")[1].decode()
-    body = request.split(b"\r\n")[1]
-    print(body)
+    print(header_body_split[0].decode())
+    if(status_code != '200'):
+        return -1
+
+    body = header_body_split[-1]
+    test = request.split(b"\r\n\r\n")
+    if(len(test) > 1):
+        body = test[-1]
+    # print(body)
     remaining_content = content_length - len(body)
     headers_length = len(header_body_split[0] + header_body_split[1])
     if content_length >= BUFFER_SIZE - headers_length or body == b'' and status_code == '200':
         while True:
             request = conn.recv(BUFFER_SIZE)
-            # if not request:
-            #     break
+            if not request:
+                break
             body += request
 
             remaining_content -= len(request)
-            print(remaining_content)
+            # print(remaining_content)
             if remaining_content <= 0:
                 break
     if(len(content_encoding_line) > 0):
@@ -74,17 +81,17 @@ def receive_file(filename, data):
         print(f"IOError: {e}")
     except:
         print(f"Unexpected Error: {sys.exc_info()[0]}")
-
-
-def process_get(route, host, protocol='HTTP/1.1'):
+ 
+ 
+def process_get(route, host, protocol='HTTP/1.0'):
     status_line = f'GET {route} {protocol}\r\n'
     host_line = f'Host: {host}\r\n'
     encoding = "Accept-Encoding: gzip, deflate, br\r\n"
     message = status_line + host_line + encoding + "\r\n"
     return message
-
-
-def process_post(route, host, file_size, protocol='HTTP/1.1', ):
+ 
+ 
+def process_post(route, host, file_size, protocol='HTTP/1.0', ):
     status_line = f'POST {route} {protocol}\r\n'
     host_line = f'Host: {host}\r\n'
     content_length = f'Content-Length: {file_size}\r\n'
