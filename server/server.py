@@ -56,7 +56,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                     #Check if http is presistent or not
                     if http_type == 'HTTP/1.1' and persistent_connection == False:
                         persistent_connection = True
-                        print(f"HTTP/1.1 Setitng timeout to ({timeout}) to close...")
+                        print(f"HTTP/1.1 Setitng timeout to (5) to close...")
                         # print("We are in persistent connection")    
                         
                     # IN CASE OF GET
