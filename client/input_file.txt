@@ -1,2 +1,2 @@
 GET files/spiderman.jpg 127.0.0.1 5505
-GET files/meme.jpg 127.0.0.1 5505
+POST files/meme.jpg 127.0.0.1 5505
