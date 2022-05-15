@@ -36,8 +36,6 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                 except socket.error:
                     break
                 if request:
-                    thread = threading.Thread(target=recvall, args=(conn, False, sender_address))
-                    thread.start()
                     # print(request)
                     # print("No request recieved, closing client connection...")
                     # conn.close()
@@ -57,7 +55,9 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                     if http_type == 'HTTP/1.1' and persistent_connection == False:
                         persistent_connection = True
                         print("HTTP/1.1 Setitng timeout to close...")
-                        print("We are in persistent connection")    
+                        print("We are in persistent connection") 
+                        thread = threading.Thread(target=recvall, args=(conn, False, sender_address))
+                        thread.start()   
                     semaphore.acquire()
                     # IN CASE OF GET
                     if request_type == 'GET':
@@ -103,7 +103,8 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                                 response = rg.get_response_by_verb(http_type, request_type, False)
                         conn.send(response.encode(FORMAT))
                         semaphore.release()
-                        thread.kill()
+                        if thread is not None:
+                            thread.kill()
                         
                     if http_type == 'HTTP/1.0':
                         print("HTTP/1.0 Closing client connection...")
