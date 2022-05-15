@@ -22,14 +22,14 @@ semaphore = Semaphore(1)
 
 # def create_child_thread():
     
-def recvall(conn, is_main_client_thread: bool, sender_address):
+def recvall(conn, is_main_client_thread: bool, sender_address, connections=0):
     print("New Thread Started for Client: {}".format(sender_address))
     persistent_connection = False
     thread = None
     with conn:
         if is_main_client_thread:
-            # timeout = 10 - 0.5 * connections
-            conn.settimeout(5)
+            timeout = 10 - 0.5 * connections
+            conn.settimeout(timeout)
             
         while True:
             try: 
@@ -53,7 +53,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                     #Check if http is presistent or not
                     if http_type == 'HTTP/1.1' and persistent_connection == False:
                         persistent_connection = True
-                        print("HTTP/1.1 Setitng timeout to close...")
+                        print(f"HTTP/1.1 Setitng timeout ({timeout}) to close...")
                         print("We are in persistent connection") 
                         thread = threading.Thread(target=recvall, args=(conn, False, sender_address))
                         thread.start()   
@@ -113,7 +113,7 @@ def recvall(conn, is_main_client_thread: bool, sender_address):
                     conn.close()
                     break  
             except socket.timeout:
-                print("Connection timeout reached (5) seconds, closing client socket...")
+                print(f"Connection timeout reached ({timeout}) seconds, closing client socket...")
                 thread.kill()
                 conn.close()
                 break   
@@ -167,7 +167,7 @@ def receive_file(filename, data):
 def handle_client(conn, sender_address , connections):
     print(f'[NEW CONNECTION] received message from {sender_address}')
     # Recieve data from connection
-    recvall(conn, True, sender_address)
+    recvall(conn, True, sender_address,connections)
     # conn.close()
     print(f"[CLOSE CONNECTION] client: {sender_address}")
   
