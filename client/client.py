@@ -110,6 +110,7 @@ with open('input_file.txt') as f:
     for line in f:
         words = line.split(" ", 3)
         request_type = words[0]
+        print("here")
         route = words[1]
         host = words[2]
         port = 80
